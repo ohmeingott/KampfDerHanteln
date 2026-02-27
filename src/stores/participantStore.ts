@@ -41,7 +41,10 @@ export const useParticipantStore = create<ParticipantState>((set) => ({
       createdAt: Date.now(),
     };
     // Optimistic: update UI first
-    set((state) => ({ people: [...state.people, person] }));
+    set((state) => ({
+      people: [...state.people, person],
+      selectedIds: new Set([...state.selectedIds, id]),
+    }));
     // Persist in background
     saveDoc(uid, 'people', id, {
       displayName: person.displayName,
