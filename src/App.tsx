@@ -32,6 +32,7 @@ export default function App() {
   useEffect(() => {
     const unsubscribe = init();
     return unsubscribe;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

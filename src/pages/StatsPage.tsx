@@ -20,6 +20,7 @@ export function StatsPage() {
     if (!user) return;
     loadPeople(user.uid);
     loadSessions(user.uid);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const completedSessions = sessions.filter((s) => s.completed);

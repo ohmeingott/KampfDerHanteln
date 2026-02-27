@@ -21,6 +21,7 @@ export function DashboardPage() {
     loadPeople(user.uid);
     loadExercises(user.uid);
     loadSessions(user.uid);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const completedSessions = sessions.filter((s) => s.completed);

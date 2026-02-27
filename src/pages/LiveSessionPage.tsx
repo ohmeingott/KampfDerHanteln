@@ -17,11 +17,11 @@ export function LiveSessionPage() {
   const [phase, setPhase] = useState<Phase>('exercise');
   const [timeLeft, setTimeLeft] = useState(0);
   const [paused, setPaused] = useState(false);
-  const [sessionStartTime] = useState(Date.now());
 
+  const sessionStartRef = useRef(Date.now());
   const endTimeRef = useRef(0);
   const animFrameRef = useRef(0);
-  const hasSpokenRef = useRef(false);
+  const completingRef = useRef(false);
 
   const exercises = currentSession?.exercises ?? [];
   const settings = currentSession?.settings;
@@ -33,7 +33,41 @@ export function LiveSessionPage() {
     setTimeLeft(durationSec);
   }, []);
 
-  // Initialize
+  const finishSession = useCallback(async () => {
+    if (completingRef.current || !user || !currentSession) return;
+    completingRef.current = true;
+    stopSpeaking();
+    const totalDuration = Math.round((Date.now() - sessionStartRef.current) / 1000);
+    await completeSession(user.uid, totalDuration);
+    navigate('/session/summary');
+  }, [user, currentSession, completeSession, navigate]);
+
+  const handlePhaseEnd = useCallback(() => {
+    if (phase === 'exercise') {
+      if (currentIndex >= exercises.length - 1) {
+        setPhase('finished');
+        speak('Fertig! Gute Arbeit!');
+        return;
+      }
+      setPhase('rest');
+      startTimer(settings!.restDurationSec);
+
+      const next = exercises[currentIndex + 1];
+      if (next.isExtreme) {
+        speak('Extreme!');
+        setTimeout(() => speak(next.name), 1200);
+      } else {
+        speak(`N\u00e4chste \u00dcbung: ${next.name}`);
+      }
+    } else if (phase === 'rest') {
+      const nextIdx = currentIndex + 1;
+      setCurrentIndex(nextIdx);
+      setPhase('exercise');
+      startTimer(exercises[nextIdx].durationSec);
+    }
+  }, [phase, currentIndex, exercises, settings, startTimer]);
+
+  // Initialize on mount
   useEffect(() => {
     if (!currentSession || exercises.length === 0) {
       navigate('/dashboard');
@@ -47,9 +81,10 @@ export function LiveSessionPage() {
       speak(ex.name);
     }
     startTimer(ex.durationSec);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Timer tick
+  // Timer tick loop
   useEffect(() => {
     if (paused || phase === 'finished') return;
 
@@ -66,62 +101,22 @@ export function LiveSessionPage() {
 
     animFrameRef.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(animFrameRef.current);
-  }, [phase, paused, currentIndex]);
+  }, [phase, paused, currentIndex, handlePhaseEnd]);
 
-  const handlePhaseEnd = () => {
-    if (phase === 'exercise') {
-      // Move to rest or finish
-      if (currentIndex >= exercises.length - 1) {
-        setPhase('finished');
-        speak('Fertig! Gute Arbeit!');
-        return;
-      }
-      setPhase('rest');
-      hasSpokenRef.current = false;
-      startTimer(settings!.restDurationSec);
-
-      // Announce next exercise during rest
-      const next = exercises[currentIndex + 1];
-      if (next.isExtreme) {
-        speak('Extreme!');
-        setTimeout(() => speak(next.name), 1200);
-      } else {
-        speak(`N\u00e4chste \u00dcbung: ${next.name}`);
-      }
-    } else if (phase === 'rest') {
-      // Move to next exercise
-      const nextIdx = currentIndex + 1;
-      setCurrentIndex(nextIdx);
-      setPhase('exercise');
-      startTimer(exercises[nextIdx].durationSec);
+  // Auto-finish when phase becomes 'finished'
+  useEffect(() => {
+    if (phase === 'finished') {
+      finishSession();
     }
-  };
+  }, [phase, finishSession]);
 
   const handlePause = () => {
     if (paused) {
-      // Resume: adjust end time
       const remainingMs = timeLeft * 1000;
       endTimeRef.current = Date.now() + remainingMs;
     }
     setPaused(!paused);
   };
-
-  const handleFinish = async () => {
-    if (!user || !currentSession) return;
-    stopSpeaking();
-    const totalDuration = Math.round((Date.now() - sessionStartTime) / 1000);
-    await completeSession(user.uid, totalDuration);
-    navigate('/session/summary');
-  };
-
-  useEffect(() => {
-    if (phase === 'finished' && user && currentSession) {
-      const totalDuration = Math.round((Date.now() - sessionStartTime) / 1000);
-      completeSession(user.uid, totalDuration).then(() => {
-        navigate('/session/summary');
-      });
-    }
-  }, [phase]);
 
   if (!currentSession || exercises.length === 0) return null;
 
@@ -161,7 +156,7 @@ export function LiveSessionPage() {
               </div>
             )}
           </>
-        ) : (
+        ) : phase === 'exercise' ? (
           <>
             <div className="text-lg text-gray-400 mb-2 font-medium">
               {'\u00dc'}bung {currentIndex + 1} von {exercises.length}
@@ -195,21 +190,25 @@ export function LiveSessionPage() {
               </div>
             )}
           </>
-        )}
+        ) : null}
       </div>
 
       {/* Controls */}
       <div className="flex justify-center gap-4 p-6">
-        <Button
-          variant={paused ? 'primary' : 'secondary'}
-          size="lg"
-          onClick={handlePause}
-        >
-          {paused ? 'Weiter' : 'Pause'}
-        </Button>
-        <Button variant="danger" size="lg" onClick={handleFinish}>
-          Beenden
-        </Button>
+        {phase !== 'finished' && (
+          <>
+            <Button
+              variant={paused ? 'primary' : 'secondary'}
+              size="lg"
+              onClick={handlePause}
+            >
+              {paused ? 'Weiter' : 'Pause'}
+            </Button>
+            <Button variant="danger" size="lg" onClick={finishSession}>
+              Beenden
+            </Button>
+          </>
+        )}
       </div>
     </div>
   );

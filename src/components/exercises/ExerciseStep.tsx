@@ -65,7 +65,6 @@ export function ExerciseStep() {
     randomSelect,
     shuffleSession,
     reorderSession,
-    addExercise,
     removeExercise,
   } = useExerciseStore();
 

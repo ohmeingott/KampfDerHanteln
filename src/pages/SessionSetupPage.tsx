@@ -30,6 +30,7 @@ export function SessionSetupPage() {
     if (!user) return;
     loadPeople(user.uid);
     loadExercises(user.uid);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const canProceedStep1 = selectedIds.size > 0;
