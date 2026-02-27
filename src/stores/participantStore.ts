@@ -23,8 +23,13 @@ export const useParticipantStore = create<ParticipantState>((set) => ({
 
   loadPeople: async (uid: string) => {
     set({ loading: true });
-    const people = await fetchAll<Person>(uid, 'people', 'createdAt');
-    set({ people, loading: false });
+    try {
+      const people = await fetchAll<Person>(uid, 'people', 'createdAt');
+      set({ people, loading: false });
+    } catch (err) {
+      console.warn('Firestore load failed:', err);
+      set({ loading: false });
+    }
   },
 
   addPerson: (uid: string, name: string, nickname?: string) => {
@@ -42,7 +47,7 @@ export const useParticipantStore = create<ParticipantState>((set) => ({
       displayName: person.displayName,
       nickname: person.nickname || null,
       createdAt: person.createdAt,
-    });
+    }).catch(() => {});
   },
 
   removePerson: (uid: string, personId: string) => {
@@ -52,7 +57,7 @@ export const useParticipantStore = create<ParticipantState>((set) => ({
       selectedIds: new Set([...state.selectedIds].filter((id) => id !== personId)),
     }));
     // Persist in background
-    removeDoc(uid, 'people', personId);
+    removeDoc(uid, 'people', personId).catch(() => {});
   },
 
   toggleSelected: (personId: string) => {

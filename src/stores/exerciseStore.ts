@@ -22,6 +22,10 @@ interface ExerciseState {
   reorderSession: (exercises: Exercise[]) => void;
 }
 
+function seedDefaults(): Exercise[] {
+  return defaultExercises.map((ex) => ({ id: uuid(), ...ex }));
+}
+
 export const useExerciseStore = create<ExerciseState>((set) => ({
   library: [],
   sessionExercises: [],
@@ -29,18 +33,23 @@ export const useExerciseStore = create<ExerciseState>((set) => ({
 
   loadExercises: async (uid: string) => {
     set({ loading: true });
-    let exercises = await fetchAll<Exercise>(uid, 'exercises');
+
+    let exercises: Exercise[] = [];
+    try {
+      exercises = await fetchAll<Exercise>(uid, 'exercises');
+    } catch (err) {
+      console.warn('Firestore load failed, using defaults:', err);
+    }
 
     if (exercises.length === 0) {
       // Seed default exercises
-      const seeded: Exercise[] = [];
-      for (const ex of defaultExercises) {
-        const id = uuid();
-        const exercise: Exercise = { id, ...ex };
-        saveDoc(uid, 'exercises', id, ex);
-        seeded.push(exercise);
-      }
+      const seeded = seedDefaults();
       exercises = seeded;
+      // Persist in background (don't block UI)
+      for (const ex of seeded) {
+        const { id, ...data } = ex;
+        saveDoc(uid, 'exercises', id, data).catch(() => {});
+      }
     }
 
     set({ library: exercises, loading: false });
@@ -50,7 +59,7 @@ export const useExerciseStore = create<ExerciseState>((set) => ({
     const id = uuid();
     const exercise: Exercise = { id, ...exerciseData };
     set((state) => ({ library: [...state.library, exercise] }));
-    saveDoc(uid, 'exercises', id, exerciseData);
+    saveDoc(uid, 'exercises', id, exerciseData).catch(() => {});
   },
 
   updateExercise: (uid: string, exercise: Exercise) => {
@@ -59,7 +68,7 @@ export const useExerciseStore = create<ExerciseState>((set) => ({
       library: state.library.map((e) => (e.id === id ? exercise : e)),
       sessionExercises: state.sessionExercises.map((e) => (e.id === id ? exercise : e)),
     }));
-    saveDoc(uid, 'exercises', id, data);
+    saveDoc(uid, 'exercises', id, data).catch(() => {});
   },
 
   removeExercise: (uid: string, exerciseId: string) => {
@@ -67,7 +76,7 @@ export const useExerciseStore = create<ExerciseState>((set) => ({
       library: state.library.filter((e) => e.id !== exerciseId),
       sessionExercises: state.sessionExercises.filter((e) => e.id !== exerciseId),
     }));
-    removeDoc(uid, 'exercises', exerciseId);
+    removeDoc(uid, 'exercises', exerciseId).catch(() => {});
   },
 
   addToSession: (exercise: Exercise) => {
