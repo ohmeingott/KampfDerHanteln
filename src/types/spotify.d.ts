@@ -1,16 +1,3 @@
-declare global {
-  interface Window {
-    onSpotifyWebPlaybackSDKReady: (() => void) | undefined;
-    Spotify: {
-      Player: new (options: {
-        name: string;
-        getOAuthToken: (cb: (token: string) => void) => void;
-        volume?: number;
-      }) => SpotifyPlayer;
-    };
-  }
-}
-
 interface SpotifyPlayer {
   connect(): Promise<boolean>;
   disconnect(): void;
@@ -46,4 +33,13 @@ interface SpotifyPlaybackState {
   };
 }
 
-export {};
+interface Window {
+  onSpotifyWebPlaybackSDKReady: (() => void) | undefined;
+  Spotify: {
+    Player: new (options: {
+      name: string;
+      getOAuthToken: (cb: (token: string) => void) => void;
+      volume?: number;
+    }) => SpotifyPlayer;
+  };
+}
