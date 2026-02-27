@@ -49,6 +49,7 @@ export const defaultExercises: Omit<Exercise, 'id'>[] = [
     repsPer40s: 11,
     dumbbellsUsed: 2,
     verticalFactor: 0.1,
+    isFloor: true,
   },
   {
     name: 'Liegend Bankdrücken',
@@ -56,6 +57,7 @@ export const defaultExercises: Omit<Exercise, 'id'>[] = [
     repsPer40s: 12,
     dumbbellsUsed: 2,
     verticalFactor: 0.9,
+    isFloor: true,
   },
   {
     name: 'Russian Twist',
@@ -63,6 +65,7 @@ export const defaultExercises: Omit<Exercise, 'id'>[] = [
     repsPer40s: 20,
     dumbbellsUsed: 1,
     verticalFactor: 0.05,
+    isFloor: true,
   },
   {
     name: 'Alternierende Liegestütze',
@@ -70,6 +73,7 @@ export const defaultExercises: Omit<Exercise, 'id'>[] = [
     repsPer40s: 10,
     dumbbellsUsed: 2,
     verticalFactor: 0.4,
+    isFloor: true,
   },
   {
     name: 'Alternierendes Armheben',
@@ -98,6 +102,7 @@ export const defaultExercises: Omit<Exercise, 'id'>[] = [
     repsPer40s: 10,
     dumbbellsUsed: 1,
     verticalFactor: 0.3,
+    isFloor: true,
   },
   {
     name: 'Sit-up',
@@ -105,6 +110,7 @@ export const defaultExercises: Omit<Exercise, 'id'>[] = [
     repsPer40s: 15,
     dumbbellsUsed: 1,
     verticalFactor: 0.4,
+    isFloor: true,
   },
   {
     name: 'Barkeeper',

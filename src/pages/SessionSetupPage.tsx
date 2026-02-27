@@ -41,7 +41,7 @@ export function SessionSetupPage() {
     createSession(
       selectedPeople.map((p) => p.id),
       selectedPeople.map((p) => p.displayName),
-      sessionExercises
+      sessionExercises.map((s) => s.exercise)
     );
     navigate('/session/live');
   };

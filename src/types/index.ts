@@ -12,6 +12,12 @@ export interface Exercise {
   repsPer40s: number;
   dumbbellsUsed: number;
   verticalFactor: number;
+  isFloor?: boolean;
+}
+
+export interface SessionSlot {
+  slotId: string;
+  exercise: Exercise;
 }
 
 export interface SessionExercise {

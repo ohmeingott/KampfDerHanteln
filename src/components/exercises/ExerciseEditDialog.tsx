@@ -19,6 +19,7 @@ export function ExerciseEditDialog({ exercise, onClose }: Props) {
   const [repsPer40s, setRepsPer40s] = useState(exercise?.repsPer40s ?? 12);
   const [dumbbellsUsed, setDumbbellsUsed] = useState(exercise?.dumbbellsUsed ?? 2);
   const [verticalFactor, setVerticalFactor] = useState(exercise?.verticalFactor ?? 0.5);
+  const [isFloor, setIsFloor] = useState(exercise?.isFloor ?? false);
 
   const handleSave = async () => {
     if (!user || !name.trim()) return;
@@ -31,6 +32,7 @@ export function ExerciseEditDialog({ exercise, onClose }: Props) {
         repsPer40s,
         dumbbellsUsed,
         verticalFactor,
+        isFloor,
       });
     } else {
       await addExercise(user.uid, {
@@ -39,6 +41,7 @@ export function ExerciseEditDialog({ exercise, onClose }: Props) {
         repsPer40s,
         dumbbellsUsed,
         verticalFactor,
+        isFloor,
       });
     }
     onClose();
@@ -82,6 +85,15 @@ export function ExerciseEditDialog({ exercise, onClose }: Props) {
             value={verticalFactor}
             onChange={(e) => setVerticalFactor(Number(e.target.value))}
           />
+          <label className="flex items-center gap-3 font-bold text-sm cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={isFloor}
+              onChange={(e) => setIsFloor(e.target.checked)}
+              className="w-5 h-5 accent-blue-500"
+            />
+            Boden{'\u00fc'}bung
+          </label>
         </div>
 
         <div className="flex gap-3 mt-6">

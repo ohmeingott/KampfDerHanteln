@@ -20,12 +20,12 @@ import { useAuthStore } from '../../stores/authStore';
 import { useExerciseStore } from '../../stores/exerciseStore';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
-import type { Exercise } from '../../types';
+import type { Exercise, SessionSlot } from '../../types';
 import { ExerciseEditDialog } from './ExerciseEditDialog';
 
-function SortableItem({ exercise, onRemove }: { exercise: Exercise; onRemove: () => void }) {
+function SortableItem({ slot, onRemove }: { slot: SessionSlot; onRemove: () => void }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
-    id: exercise.id,
+    id: slot.slotId,
   });
 
   const style = {
@@ -37,12 +37,18 @@ function SortableItem({ exercise, onRemove }: { exercise: Exercise; onRemove: ()
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-center gap-2 bg-white border-brutal-thin px-3 py-2 text-sm font-medium"
+      className={`flex items-center gap-2 border-brutal-thin px-3 py-2 text-sm font-medium
+        ${slot.exercise.isFloor ? 'bg-blue-50' : 'bg-white'}`}
     >
       <span {...attributes} {...listeners} className="cursor-grab text-gray-400 select-none">
         &#x2630;
       </span>
-      <span className="flex-1">{exercise.name}</span>
+      <span className="flex-1">
+        {slot.exercise.name}
+        {slot.exercise.isFloor && (
+          <span className="ml-2 text-xs text-blue-400">Boden</span>
+        )}
+      </span>
       <button
         onClick={onRemove}
         className="text-red-500 font-bold hover:text-red-700 cursor-pointer"
@@ -86,15 +92,18 @@ export function ExerciseStep() {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
-  const sessionIds = new Set(sessionExercises.map((e) => e.id));
-  const availableExercises = library.filter((e) => !sessionIds.has(e.id));
+  // Count how many times each exercise appears in session
+  const sessionCounts = new Map<string, number>();
+  for (const s of sessionExercises) {
+    sessionCounts.set(s.exercise.id, (sessionCounts.get(s.exercise.id) || 0) + 1);
+  }
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const oldIndex = sessionExercises.findIndex((e) => e.id === active.id);
-    const newIndex = sessionExercises.findIndex((e) => e.id === over.id);
+    const oldIndex = sessionExercises.findIndex((s) => s.slotId === active.id);
+    const newIndex = sessionExercises.findIndex((s) => s.slotId === over.id);
     reorderSession(arrayMove(sessionExercises, oldIndex, newIndex));
   }
 
@@ -103,13 +112,15 @@ export function ExerciseStep() {
     await removeExercise(user.uid, id);
   };
 
+  const uniqueInSession = new Set(sessionExercises.map((s) => s.exercise.id)).size;
+
   return (
     <div>
       <h3 className="text-2xl font-bold mb-4">{'\u00dc'}bungen f{'\u00fc'}r heute</h3>
 
       <div className="flex flex-wrap gap-3 mb-6">
         <Button variant="secondary" size="sm" onClick={() => randomSelect()}>
-          Random (~25)
+          Smart Mix (~25)
         </Button>
         <Button variant="secondary" size="sm" onClick={shuffleSession}>
           Shuffle
@@ -129,29 +140,36 @@ export function ExerciseStep() {
         {/* Library */}
         <div>
           <h4 className="font-bold mb-3 text-sm uppercase tracking-wider text-gray-500">
-            Bibliothek ({availableExercises.length})
+            Bibliothek ({library.length})
           </h4>
           <Card className="!p-3 max-h-[500px] overflow-y-auto">
             {loading ? (
               <p className="text-gray-400 text-sm text-center py-4">
                 Laden...
               </p>
-            ) : availableExercises.length === 0 && library.length === 0 ? (
+            ) : library.length === 0 ? (
               <p className="text-gray-400 text-sm text-center py-4">
                 Keine {'\u00dc'}bungen vorhanden. Klicke &quot;+ Neue {'\u00dc'}bung&quot;.
               </p>
-            ) : availableExercises.length === 0 ? (
-              <p className="text-gray-400 text-sm text-center py-4">
-                Alle {'\u00dc'}bungen ausgew{'\u00e4'}hlt
-              </p>
             ) : (
               <div className="space-y-1">
-                {availableExercises.map((exercise) => (
+                {library.map((exercise) => (
                   <div
                     key={exercise.id}
-                    className="flex items-center gap-2 px-3 py-2 border-brutal-thin text-sm font-medium hover:bg-gray-50"
+                    className={`flex items-center gap-2 px-3 py-2 border-brutal-thin text-sm font-medium hover:bg-gray-50
+                      ${exercise.isFloor ? 'bg-blue-50' : ''}`}
                   >
-                    <span className="flex-1">{exercise.name}</span>
+                    <span className="flex-1">
+                      {exercise.name}
+                      {exercise.isFloor && (
+                        <span className="ml-2 text-xs text-blue-400">Boden</span>
+                      )}
+                    </span>
+                    {sessionCounts.has(exercise.id) && (
+                      <span className="text-xs text-gray-400 font-mono">
+                        {sessionCounts.get(exercise.id)}x
+                      </span>
+                    )}
                     <button
                       onClick={() => setEditingExercise(exercise)}
                       className="text-gray-400 hover:text-dark cursor-pointer text-xs"
@@ -177,7 +195,7 @@ export function ExerciseStep() {
         {/* Session */}
         <div>
           <h4 className="font-bold mb-3 text-sm uppercase tracking-wider text-gray-500">
-            Heute ({sessionExercises.length})
+            Heute ({sessionExercises.length} Slots, {uniqueInSession} {'\u00dc'}bungen)
           </h4>
           <Card className="!p-3 max-h-[500px] overflow-y-auto">
             {sessionExercises.length === 0 ? (
@@ -191,15 +209,15 @@ export function ExerciseStep() {
                 onDragEnd={handleDragEnd}
               >
                 <SortableContext
-                  items={sessionExercises.map((e) => e.id)}
+                  items={sessionExercises.map((s) => s.slotId)}
                   strategy={verticalListSortingStrategy}
                 >
                   <div className="space-y-1">
-                    {sessionExercises.map((exercise) => (
+                    {sessionExercises.map((slot) => (
                       <SortableItem
-                        key={exercise.id}
-                        exercise={exercise}
-                        onRemove={() => removeFromSession(exercise.id)}
+                        key={slot.slotId}
+                        slot={slot}
+                        onRemove={() => removeFromSession(slot.slotId)}
                       />
                     ))}
                   </div>
