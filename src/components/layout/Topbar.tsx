@@ -1,12 +1,17 @@
+import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
 import { Button } from '../ui/Button';
 
 export function Topbar() {
+  const navigate = useNavigate();
   const { user, logout } = useAuthStore();
 
   return (
     <header className="bg-white border-b-3 border-dark px-6 py-4 flex items-center justify-between">
-      <h1 className="text-2xl font-bold tracking-tight">
+      <h1
+        className="text-2xl font-bold tracking-tight cursor-pointer"
+        onClick={() => navigate('/dashboard')}
+      >
         <span className="text-primary">Kampf</span> der Hanteln
       </h1>
       {user && (
