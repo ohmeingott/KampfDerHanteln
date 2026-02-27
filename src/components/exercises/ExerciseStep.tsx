@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -58,6 +58,7 @@ export function ExerciseStep() {
   const {
     library,
     sessionExercises,
+    loading,
     addToSession,
     removeFromSession,
     addAllToSession,
@@ -66,10 +67,19 @@ export function ExerciseStep() {
     shuffleSession,
     reorderSession,
     removeExercise,
+    loadExercises,
   } = useExerciseStore();
 
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
   const [showAddNew, setShowAddNew] = useState(false);
+
+  // Ensure exercises are loaded
+  useEffect(() => {
+    if (user && library.length === 0 && !loading) {
+      loadExercises(user.uid);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, library.length, loading]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -122,7 +132,15 @@ export function ExerciseStep() {
             Bibliothek ({availableExercises.length})
           </h4>
           <Card className="!p-3 max-h-[500px] overflow-y-auto">
-            {availableExercises.length === 0 ? (
+            {loading ? (
+              <p className="text-gray-400 text-sm text-center py-4">
+                Laden...
+              </p>
+            ) : availableExercises.length === 0 && library.length === 0 ? (
+              <p className="text-gray-400 text-sm text-center py-4">
+                Keine {'\u00dc'}bungen vorhanden. Klicke &quot;+ Neue {'\u00dc'}bung&quot;.
+              </p>
+            ) : availableExercises.length === 0 ? (
               <p className="text-gray-400 text-sm text-center py-4">
                 Alle {'\u00dc'}bungen ausgew{'\u00e4'}hlt
               </p>
