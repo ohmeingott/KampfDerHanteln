@@ -1,10 +1,15 @@
+import { Navigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { isFirebaseConfigured } from '../lib/firebase';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 
 export function LoginPage() {
-  const { login, loginDemo } = useAuthStore();
+  const { user, login, loginDemo } = useAuthStore();
+
+  if (user) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-brutal-bg p-4">
