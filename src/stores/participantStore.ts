@@ -8,15 +8,15 @@ interface ParticipantState {
   selectedIds: Set<string>;
   loading: boolean;
   loadPeople: (uid: string) => Promise<void>;
-  addPerson: (uid: string, name: string, nickname?: string) => Promise<void>;
-  removePerson: (uid: string, personId: string) => Promise<void>;
+  addPerson: (uid: string, name: string, nickname?: string) => void;
+  removePerson: (uid: string, personId: string) => void;
   toggleSelected: (personId: string) => void;
   selectAll: () => void;
   deselectAll: () => void;
   setSelected: (ids: Set<string>) => void;
 }
 
-export const useParticipantStore = create<ParticipantState>((set, get) => ({
+export const useParticipantStore = create<ParticipantState>((set) => ({
   people: [],
   selectedIds: new Set(),
   loading: false,
@@ -27,7 +27,7 @@ export const useParticipantStore = create<ParticipantState>((set, get) => ({
     set({ people, loading: false });
   },
 
-  addPerson: async (uid: string, name: string, nickname?: string) => {
+  addPerson: (uid: string, name: string, nickname?: string) => {
     const id = uuid();
     const person: Person = {
       id,
@@ -35,20 +35,24 @@ export const useParticipantStore = create<ParticipantState>((set, get) => ({
       nickname: nickname || undefined,
       createdAt: Date.now(),
     };
-    await saveDoc(uid, 'people', id, {
+    // Optimistic: update UI first
+    set((state) => ({ people: [...state.people, person] }));
+    // Persist in background
+    saveDoc(uid, 'people', id, {
       displayName: person.displayName,
       nickname: person.nickname || null,
       createdAt: person.createdAt,
     });
-    set((state) => ({ people: [...state.people, person] }));
   },
 
-  removePerson: async (uid: string, personId: string) => {
-    await removeDoc(uid, 'people', personId);
+  removePerson: (uid: string, personId: string) => {
+    // Optimistic: update UI first
     set((state) => ({
       people: state.people.filter((p) => p.id !== personId),
       selectedIds: new Set([...state.selectedIds].filter((id) => id !== personId)),
     }));
+    // Persist in background
+    removeDoc(uid, 'people', personId);
   },
 
   toggleSelected: (personId: string) => {

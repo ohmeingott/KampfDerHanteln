@@ -20,15 +20,15 @@ export function ParticipantStep() {
 
   const [newName, setNewName] = useState('');
 
-  const handleAdd = async () => {
+  const handleAdd = () => {
     if (!newName.trim() || !user) return;
-    await addPerson(user.uid, newName.trim());
+    addPerson(user.uid, newName.trim());
     setNewName('');
   };
 
-  const handleRemove = async (id: string) => {
+  const handleRemove = (id: string) => {
     if (!user) return;
-    await removePerson(user.uid, id);
+    removePerson(user.uid, id);
   };
 
   return (

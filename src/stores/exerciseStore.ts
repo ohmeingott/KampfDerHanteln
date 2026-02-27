@@ -10,9 +10,9 @@ interface ExerciseState {
   sessionExercises: Exercise[];
   loading: boolean;
   loadExercises: (uid: string) => Promise<void>;
-  addExercise: (uid: string, exercise: Omit<Exercise, 'id'>) => Promise<void>;
-  updateExercise: (uid: string, exercise: Exercise) => Promise<void>;
-  removeExercise: (uid: string, exerciseId: string) => Promise<void>;
+  addExercise: (uid: string, exercise: Omit<Exercise, 'id'>) => void;
+  updateExercise: (uid: string, exercise: Exercise) => void;
+  removeExercise: (uid: string, exerciseId: string) => void;
   addToSession: (exercise: Exercise) => void;
   removeFromSession: (exerciseId: string) => void;
   addAllToSession: () => void;
@@ -22,7 +22,7 @@ interface ExerciseState {
   reorderSession: (exercises: Exercise[]) => void;
 }
 
-export const useExerciseStore = create<ExerciseState>((set, get) => ({
+export const useExerciseStore = create<ExerciseState>((set) => ({
   library: [],
   sessionExercises: [],
   loading: false,
@@ -37,7 +37,7 @@ export const useExerciseStore = create<ExerciseState>((set, get) => ({
       for (const ex of defaultExercises) {
         const id = uuid();
         const exercise: Exercise = { id, ...ex };
-        await saveDoc(uid, 'exercises', id, ex);
+        saveDoc(uid, 'exercises', id, ex);
         seeded.push(exercise);
       }
       exercises = seeded;
@@ -46,28 +46,28 @@ export const useExerciseStore = create<ExerciseState>((set, get) => ({
     set({ library: exercises, loading: false });
   },
 
-  addExercise: async (uid: string, exerciseData: Omit<Exercise, 'id'>) => {
+  addExercise: (uid: string, exerciseData: Omit<Exercise, 'id'>) => {
     const id = uuid();
     const exercise: Exercise = { id, ...exerciseData };
-    await saveDoc(uid, 'exercises', id, exerciseData);
     set((state) => ({ library: [...state.library, exercise] }));
+    saveDoc(uid, 'exercises', id, exerciseData);
   },
 
-  updateExercise: async (uid: string, exercise: Exercise) => {
+  updateExercise: (uid: string, exercise: Exercise) => {
     const { id, ...data } = exercise;
-    await saveDoc(uid, 'exercises', id, data);
     set((state) => ({
       library: state.library.map((e) => (e.id === id ? exercise : e)),
       sessionExercises: state.sessionExercises.map((e) => (e.id === id ? exercise : e)),
     }));
+    saveDoc(uid, 'exercises', id, data);
   },
 
-  removeExercise: async (uid: string, exerciseId: string) => {
-    await removeDoc(uid, 'exercises', exerciseId);
+  removeExercise: (uid: string, exerciseId: string) => {
     set((state) => ({
       library: state.library.filter((e) => e.id !== exerciseId),
       sessionExercises: state.sessionExercises.filter((e) => e.id !== exerciseId),
     }));
+    removeDoc(uid, 'exercises', exerciseId);
   },
 
   addToSession: (exercise: Exercise) => {
