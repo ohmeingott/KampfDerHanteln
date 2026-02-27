@@ -3,10 +3,26 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { useSessionStore } from '../stores/sessionStore';
 import { speak, stopSpeaking } from '../lib/tts';
+import { beepCountdown, beepGo, beepEnd } from '../lib/beep';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 
-type Phase = 'exercise' | 'rest' | 'finished';
+type Phase = 'countdown' | 'exercise' | 'rest' | 'finished';
+
+const BG_COLORS = [
+  '#1a1a2e', // deep navy
+  '#16213e', // dark blue
+  '#0f3460', // royal blue
+  '#1b1b3a', // dark purple
+  '#2d132c', // plum
+  '#3b0d2c', // dark magenta
+  '#1a3c40', // dark teal
+  '#0b3d3d', // deep cyan
+  '#2b2d42', // steel blue
+  '#3d1c02', // dark amber
+  '#1c2833', // charcoal blue
+  '#1e0a3c', // deep violet
+];
 
 export function LiveSessionPage() {
   const navigate = useNavigate();
@@ -14,9 +30,10 @@ export function LiveSessionPage() {
   const { currentSession, completeSession } = useSessionStore();
 
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [phase, setPhase] = useState<Phase>('exercise');
+  const [phase, setPhase] = useState<Phase>('countdown');
   const [timeLeft, setTimeLeft] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [countdownNum, setCountdownNum] = useState(3);
 
   const sessionStartRef = useRef(Date.now());
   const endTimeRef = useRef(0);
@@ -38,12 +55,17 @@ export function LiveSessionPage() {
     completingRef.current = true;
     stopSpeaking();
     const totalDuration = Math.round((Date.now() - sessionStartRef.current) / 1000);
-    await completeSession(user.uid, totalDuration);
+    try {
+      await completeSession(user.uid, totalDuration);
+    } catch (err) {
+      console.warn('Failed to save session:', err);
+    }
     navigate('/session/summary');
   }, [user, currentSession, completeSession, navigate]);
 
   const handlePhaseEnd = useCallback(() => {
     if (phase === 'exercise') {
+      beepEnd();
       if (currentIndex >= exercises.length - 1) {
         setPhase('finished');
         speak('Fertig! Gute Arbeit!');
@@ -60,6 +82,7 @@ export function LiveSessionPage() {
         speak(`N\u00e4chste \u00dcbung: ${next.name}`);
       }
     } else if (phase === 'rest') {
+      beepGo();
       const nextIdx = currentIndex + 1;
       setCurrentIndex(nextIdx);
       setPhase('exercise');
@@ -67,26 +90,40 @@ export function LiveSessionPage() {
     }
   }, [phase, currentIndex, exercises, settings, startTimer]);
 
-  // Initialize on mount
+  // Initialize on mount – start with countdown
   useEffect(() => {
     if (!currentSession || exercises.length === 0) {
       navigate('/dashboard');
       return;
     }
-    const ex = exercises[0];
-    if (ex.isExtreme) {
-      speak('Extreme!');
-      setTimeout(() => speak(ex.name), 1500);
-    } else {
-      speak(ex.name);
-    }
-    startTimer(ex.durationSec);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Countdown 3-2-1-GO logic
+  useEffect(() => {
+    if (phase !== 'countdown') return;
+    beepCountdown();
+    if (countdownNum <= 0) {
+      beepGo();
+      setPhase('exercise');
+      const ex = exercises[0];
+      if (ex.isExtreme) {
+        speak('Extreme!');
+        setTimeout(() => speak(ex.name), 1500);
+      } else {
+        speak(ex.name);
+      }
+      startTimer(ex.durationSec);
+      sessionStartRef.current = Date.now();
+      return;
+    }
+    const timer = setTimeout(() => setCountdownNum((n) => n - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [phase, countdownNum, exercises, startTimer]);
+
   // Timer tick loop
   useEffect(() => {
-    if (paused || phase === 'finished') return;
+    if (paused || phase === 'finished' || phase === 'countdown') return;
 
     const tick = () => {
       const remaining = Math.max(0, Math.ceil((endTimeRef.current - Date.now()) / 1000));
@@ -140,9 +177,13 @@ export function LiveSessionPage() {
   if (!currentSession || exercises.length === 0) return null;
 
   const progress = ((currentIndex + 1) / exercises.length) * 100;
+  const bgColor = phase === 'rest' ? '#111111' : BG_COLORS[currentIndex % BG_COLORS.length];
 
   return (
-    <div className="min-h-screen bg-dark text-white flex flex-col">
+    <div
+      className="min-h-screen text-white flex flex-col transition-colors duration-700"
+      style={{ backgroundColor: bgColor }}
+    >
       {/* Progress bar */}
       <div className="h-2 bg-gray-700 w-full">
         <div
@@ -151,7 +192,20 @@ export function LiveSessionPage() {
         />
       </div>
 
+      {/* Countdown overlay */}
+      {phase === 'countdown' && (
+        <div className="flex-1 flex flex-col items-center justify-center">
+          <div
+            key={countdownNum}
+            className="text-[14rem] leading-none font-bold text-white animate-ping-once"
+          >
+            {countdownNum > 0 ? countdownNum : 'LOS!'}
+          </div>
+        </div>
+      )}
+
       {/* Main content */}
+      {phase !== 'countdown' && (
       <div className="flex-1 flex flex-col items-center justify-center p-8">
         {phase === 'rest' ? (
           <>
@@ -211,6 +265,7 @@ export function LiveSessionPage() {
           </>
         ) : null}
       </div>
+      )}
 
       {/* Controls */}
       <div className="flex justify-center gap-4 p-6">
@@ -224,7 +279,7 @@ export function LiveSessionPage() {
               {paused ? 'Weiter' : 'Pause'}
             </Button>
             {phase === 'exercise' && (
-              <Button variant="ghost" size="lg" onClick={handleSkip}>
+              <Button variant="secondary" size="lg" onClick={handleSkip}>
                 Skip
               </Button>
             )}

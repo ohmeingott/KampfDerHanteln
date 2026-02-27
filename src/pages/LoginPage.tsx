@@ -14,9 +14,11 @@ export function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-brutal-bg p-4">
       <Card className="max-w-md w-full text-center">
-        <h1 className="text-4xl font-bold mb-2">
-          <span className="text-primary">Kampf</span> der Hanteln
-        </h1>
+        <img
+          src="/hantel-logo.png"
+          alt="Kampf der Hanteln"
+          className="w-48 mx-auto mb-4"
+        />
         <p className="text-lg text-gray-600 mb-8 font-medium">
           Remote Training Session Manager
         </p>

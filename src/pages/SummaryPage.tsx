@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import confetti from 'canvas-confetti';
 import { useSessionStore } from '../stores/sessionStore';
 import { calculatePhysics } from '../lib/physics';
 import { Topbar } from '../components/layout/Topbar';
@@ -10,6 +12,17 @@ import { Button } from '../components/ui/Button';
 export function SummaryPage() {
   const navigate = useNavigate();
   const { currentSession } = useSessionStore();
+
+  useEffect(() => {
+    if (!currentSession) return;
+    const end = Date.now() + 2000;
+    const frame = () => {
+      confetti({ particleCount: 30, angle: 60, spread: 55, origin: { x: 0 } });
+      confetti({ particleCount: 30, angle: 120, spread: 55, origin: { x: 1 } });
+      if (Date.now() < end) requestAnimationFrame(frame);
+    };
+    frame();
+  }, [currentSession]);
 
   if (!currentSession) {
     return (

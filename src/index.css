@@ -51,3 +51,22 @@
     box-shadow: 0px 0px 0px var(--color-brutal-border);
   }
 }
+
+@utility animate-ping-once {
+  animation: countdown-pop 0.8s ease-out;
+}
+
+@keyframes countdown-pop {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  40% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
