@@ -118,6 +118,25 @@ export function LiveSessionPage() {
     setPaused(!paused);
   };
 
+  const handleSkip = () => {
+    stopSpeaking();
+    if (currentIndex >= exercises.length - 1) {
+      setPhase('finished');
+      speak('Fertig! Gute Arbeit!');
+      return;
+    }
+    // Jump to rest phase announcing the next exercise
+    setPhase('rest');
+    startTimer(settings!.restDurationSec);
+    const next = exercises[currentIndex + 1];
+    if (next.isExtreme) {
+      speak('Extreme!');
+      setTimeout(() => speak(next.name), 1200);
+    } else {
+      speak(`N\u00e4chste \u00dcbung: ${next.name}`);
+    }
+  };
+
   if (!currentSession || exercises.length === 0) return null;
 
   const progress = ((currentIndex + 1) / exercises.length) * 100;
@@ -204,6 +223,11 @@ export function LiveSessionPage() {
             >
               {paused ? 'Weiter' : 'Pause'}
             </Button>
+            {phase === 'exercise' && (
+              <Button variant="ghost" size="lg" onClick={handleSkip}>
+                Skip
+              </Button>
+            )}
             <Button variant="danger" size="lg" onClick={finishSession}>
               Beenden
             </Button>
