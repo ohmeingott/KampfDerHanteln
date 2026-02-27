@@ -24,8 +24,10 @@ export const useParticipantStore = create<ParticipantState>((set) => ({
   loadPeople: async (uid: string) => {
     set({ loading: true });
     try {
-      const people = await fetchAll<Person>(uid, 'people', 'createdAt');
-      set({ people, loading: false });
+      const people = await fetchAll<Person>(uid, 'people', 'createdAt', (cached) => {
+        set({ people: cached, selectedIds: new Set(cached.map((p) => p.id)), loading: false });
+      });
+      set({ people, selectedIds: new Set(people.map((p) => p.id)), loading: false });
     } catch (err) {
       console.warn('Firestore load failed:', err);
       set({ loading: false });

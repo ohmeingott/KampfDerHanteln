@@ -11,6 +11,7 @@ import { ParticipantStep } from '../components/participants/ParticipantStep';
 import { ExerciseStep } from '../components/exercises/ExerciseStep';
 import { SettingsStep } from '../components/session/SettingsStep';
 import { Button } from '../components/ui/Button';
+import { spawnEmojiFloat } from '../lib/emojiFloat';
 
 const steps = [
   { number: 1, label: 'Teilnehmer' },
@@ -76,7 +77,7 @@ export function SessionSetupPage() {
               </Button>
             )}
             {step === 3 && (
-              <Button onClick={handleStart} disabled={!canProceedStep2}>
+              <Button onClick={(e) => { spawnEmojiFloat(e); handleStart(); }} disabled={!canProceedStep2}>
                 Session starten!
               </Button>
             )}

@@ -100,7 +100,9 @@ export const useSessionStore = create<SessionState>((set, get) => ({
 
   loadSessions: async (uid: string) => {
     set({ loading: true });
-    const sessions = await fetchAll<Session>(uid, 'sessions', 'date');
+    const sessions = await fetchAll<Session>(uid, 'sessions', 'date', (cached) => {
+      set({ sessions: cached, loading: false });
+    });
     set({ sessions, loading: false });
   },
 }));

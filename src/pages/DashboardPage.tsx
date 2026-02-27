@@ -8,6 +8,8 @@ import { Topbar } from '../components/layout/Topbar';
 import { PageContainer } from '../components/layout/PageContainer';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
+import { spawnEmojiFloat } from '../lib/emojiFloat';
+import { SpotifyConnectButton } from '../components/spotify/SpotifyConnectButton';
 
 export function DashboardPage() {
   const navigate = useNavigate();
@@ -48,12 +50,13 @@ export function DashboardPage() {
         </div>
 
         <div className="flex flex-wrap gap-4">
-          <Button size="lg" onClick={() => navigate('/session/setup')}>
+          <Button size="lg" onClick={(e) => { spawnEmojiFloat(e); navigate('/session/setup'); }}>
             Neue Session starten
           </Button>
           <Button size="lg" variant="secondary" onClick={() => navigate('/stats')}>
             Statistiken
           </Button>
+          <SpotifyConnectButton />
         </div>
 
         {completedSessions.length > 0 && (

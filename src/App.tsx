@@ -7,6 +7,7 @@ import { SessionSetupPage } from './pages/SessionSetupPage';
 import { LiveSessionPage } from './pages/LiveSessionPage';
 import { SummaryPage } from './pages/SummaryPage';
 import { StatsPage } from './pages/StatsPage';
+import { SpotifyCallbackPage } from './pages/SpotifyCallbackPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuthStore();
@@ -79,6 +80,7 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/callback/spotify" element={<SpotifyCallbackPage />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </BrowserRouter>

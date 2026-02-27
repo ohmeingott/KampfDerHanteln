@@ -158,15 +158,19 @@ export const useExerciseStore = create<ExerciseState>((set) => ({
 
   loadExercises: async (uid: string) => {
     set({ loading: true });
+    let hadCache = false;
 
     let exercises: Exercise[] = [];
     try {
-      exercises = await fetchAll<Exercise>(uid, 'exercises');
+      exercises = await fetchAll<Exercise>(uid, 'exercises', undefined, (cached) => {
+        hadCache = true;
+        set({ library: cached, loading: false });
+      });
     } catch (err) {
-      console.warn('Firestore load failed, using defaults:', err);
+      console.warn('Firestore load failed:', err);
     }
 
-    if (exercises.length === 0) {
+    if (exercises.length === 0 && !hadCache) {
       const seeded = seedDefaults();
       exercises = seeded;
       for (const ex of seeded) {
@@ -175,7 +179,11 @@ export const useExerciseStore = create<ExerciseState>((set) => ({
       }
     }
 
-    set({ library: exercises, loading: false });
+    if (exercises.length > 0) {
+      set({ library: exercises, loading: false });
+    } else {
+      set({ loading: false });
+    }
   },
 
   addExercise: (uid: string, exerciseData: Omit<Exercise, 'id'>) => {

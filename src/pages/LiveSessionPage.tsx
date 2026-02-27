@@ -6,6 +6,8 @@ import { speak, stopSpeaking } from '../lib/tts';
 import { beepCountdown, beepGo, beepEnd } from '../lib/beep';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
+import { SpotifyPlayerBar } from '../components/spotify/SpotifyPlayerBar';
+import { useSpotifyStore } from '../stores/spotifyStore';
 
 type Phase = 'countdown' | 'exercise' | 'rest' | 'finished';
 
@@ -147,10 +149,15 @@ export function LiveSessionPage() {
     }
   }, [phase, finishSession]);
 
+  const { isConnected: spotifyConnected, isPlaying: spotifyPlaying, togglePlayback: spotifyToggle } = useSpotifyStore();
+
   const handlePause = () => {
     if (paused) {
       const remainingMs = timeLeft * 1000;
       endTimeRef.current = Date.now() + remainingMs;
+      if (spotifyConnected && !spotifyPlaying) spotifyToggle();
+    } else {
+      if (spotifyConnected && spotifyPlaying) spotifyToggle();
     }
     setPaused(!paused);
   };
@@ -268,7 +275,7 @@ export function LiveSessionPage() {
       )}
 
       {/* Controls */}
-      <div className="flex justify-center gap-4 p-6">
+      <div className="flex justify-center gap-4 p-6 pb-20">
         {phase !== 'finished' && (
           <>
             <Button
@@ -289,6 +296,8 @@ export function LiveSessionPage() {
           </>
         )}
       </div>
+
+      <SpotifyPlayerBar />
     </div>
   );
 }

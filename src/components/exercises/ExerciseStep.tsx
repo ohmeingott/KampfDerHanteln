@@ -22,6 +22,7 @@ import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import type { Exercise, SessionSlot } from '../../types';
 import { ExerciseEditDialog } from './ExerciseEditDialog';
+import { spawnEmojiFloat } from '../../lib/emojiFloat';
 
 function SortableItem({ slot, onRemove }: { slot: SessionSlot; onRemove: () => void }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
@@ -119,10 +120,10 @@ export function ExerciseStep() {
       <h3 className="text-2xl font-bold mb-4">{'\u00dc'}bungen f{'\u00fc'}r heute</h3>
 
       <div className="flex flex-wrap gap-3 mb-6">
-        <Button variant="secondary" size="sm" onClick={() => randomSelect()}>
+        <Button variant="secondary" size="sm" onClick={(e) => { spawnEmojiFloat(e); randomSelect(); }}>
           Smart Mix (~25)
         </Button>
-        <Button variant="secondary" size="sm" onClick={shuffleSession}>
+        <Button variant="secondary" size="sm" onClick={(e) => { spawnEmojiFloat(e); shuffleSession(); }}>
           Shuffle
         </Button>
         <Button variant="ghost" size="sm" onClick={addAllToSession}>

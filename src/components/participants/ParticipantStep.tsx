@@ -5,6 +5,7 @@ import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { Toggle } from '../ui/Toggle';
 import { Card } from '../ui/Card';
+import { spawnEmojiFloat } from '../../lib/emojiFloat';
 
 export function ParticipantStep() {
   const { user } = useAuthStore();
@@ -45,7 +46,7 @@ export function ParticipantStep() {
               onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
             />
           </div>
-          <Button onClick={handleAdd} disabled={!newName.trim()}>
+          <Button onClick={(e) => { spawnEmojiFloat(e); handleAdd(); }} disabled={!newName.trim()}>
             Hinzuf{'\u00fc'}gen
           </Button>
         </div>
