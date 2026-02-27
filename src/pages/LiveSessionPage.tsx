@@ -52,16 +52,14 @@ export function LiveSessionPage() {
     setTimeLeft(durationSec);
   }, []);
 
-  const finishSession = useCallback(async () => {
+  const finishSession = useCallback(() => {
     if (completingRef.current || !user || !currentSession) return;
     completingRef.current = true;
     stopSpeaking();
     const totalDuration = Math.round((Date.now() - sessionStartRef.current) / 1000);
-    try {
-      await completeSession(user.uid, totalDuration);
-    } catch (err) {
+    completeSession(user.uid, totalDuration).catch((err) => {
       console.warn('Failed to save session:', err);
-    }
+    });
     navigate('/session/summary');
   }, [user, currentSession, completeSession, navigate]);
 

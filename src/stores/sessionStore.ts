@@ -80,6 +80,13 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       totalDurationSec,
     };
 
+    // Update store immediately (optimistic)
+    set((state) => ({
+      currentSession: completed,
+      sessions: [...state.sessions, completed],
+    }));
+
+    // Persist in background
     await saveDoc(uid, 'sessions', completed.id, {
       date: completed.date,
       participants: completed.participants,
@@ -91,11 +98,6 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       totalMeters: completed.totalMeters,
       totalWorkKJ: completed.totalWorkKJ,
     });
-
-    set((state) => ({
-      currentSession: completed,
-      sessions: [...state.sessions, completed],
-    }));
   },
 
   loadSessions: async (uid: string) => {

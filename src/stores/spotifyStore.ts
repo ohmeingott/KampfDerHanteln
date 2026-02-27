@@ -30,7 +30,8 @@ interface SpotifyState {
   initPlayer: () => Promise<void>;
   togglePlayback: () => Promise<void>;
   skipTrack: () => Promise<void>;
-  startPlayback: () => Promise<void>;
+  startPlayback: (contextUri?: string) => Promise<void>;
+  playWorkoutMusic: () => Promise<void>;
   duck: () => void;
   unduck: () => void;
 
@@ -177,20 +178,66 @@ export const useSpotifyStore = create<SpotifyState>((set, get) => ({
     if (_player) _player.setVolume(0.5);
   },
 
-  startPlayback: async () => {
+  startPlayback: async (contextUri?: string) => {
     const { deviceId } = get();
     if (!deviceId) return;
     try {
       const token = await get()._getValidToken();
+      const body = contextUri ? JSON.stringify({ context_uri: contextUri }) : undefined;
       await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
+        body,
       });
     } catch (err) {
       console.warn('Spotify: failed to start playback', err);
+    }
+  },
+
+  playWorkoutMusic: async () => {
+    const { deviceId } = get();
+    if (!deviceId) return;
+    try {
+      const token = await get()._getValidToken();
+
+      // Try workout category playlists first
+      let playlistUri: string | null = null;
+      try {
+        const catRes = await fetch(
+          'https://api.spotify.com/v1/browse/categories/workout/playlists?limit=1',
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (catRes.ok) {
+          const catData = await catRes.json();
+          const first = catData?.playlists?.items?.[0];
+          if (first) playlistUri = first.uri;
+        }
+      } catch { /* fall through to search */ }
+
+      // Fallback: search for "Workout" playlist
+      if (!playlistUri) {
+        const searchRes = await fetch(
+          `https://api.spotify.com/v1/search?q=${encodeURIComponent('workout music')}&type=playlist&limit=1`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (searchRes.ok) {
+          const searchData = await searchRes.json();
+          const first = searchData?.playlists?.items?.[0];
+          if (first) playlistUri = first.uri;
+        }
+      }
+
+      if (playlistUri) {
+        await get().startPlayback(playlistUri);
+      } else {
+        // Last resort: just resume whatever was playing
+        await get().startPlayback();
+      }
+    } catch (err) {
+      console.warn('Spotify: failed to play workout music', err);
     }
   },
 }));

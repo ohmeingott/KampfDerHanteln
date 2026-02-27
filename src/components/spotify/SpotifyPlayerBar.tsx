@@ -11,7 +11,7 @@ export function SpotifyPlayerBar() {
     initPlayer,
     togglePlayback,
     skipTrack,
-    startPlayback,
+    playWorkoutMusic,
   } = useSpotifyStore();
 
   useEffect(() => {
@@ -21,9 +21,9 @@ export function SpotifyPlayerBar() {
 
   useEffect(() => {
     if (isPlayerReady && isConnected) {
-      startPlayback();
+      playWorkoutMusic();
     }
-  }, [isPlayerReady, isConnected, startPlayback]);
+  }, [isPlayerReady, isConnected, playWorkoutMusic]);
 
   if (!isSpotifyConfigured || !isConnected) return null;
 
