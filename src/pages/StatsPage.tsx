@@ -78,17 +78,17 @@ export function StatsPage() {
           <div className="space-y-3">
             {personStats.map((stats, rank) => (
               <Card key={stats.personId} className="!p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 sm:gap-4 min-w-0">
                     <span
-                      className={`w-10 h-10 flex items-center justify-center border-brutal-thin
-                        font-bold text-lg
+                      className={`w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0 flex items-center justify-center border-brutal-thin
+                        font-bold text-base sm:text-lg
                         ${rank === 0 ? 'bg-secondary' : rank === 1 ? 'bg-gray-200' : rank === 2 ? 'bg-orange-200' : 'bg-white'}`}
                     >
                       {rank + 1}
                     </span>
-                    <div>
-                      <div className="font-bold text-lg">{stats.displayName}</div>
+                    <div className="min-w-0">
+                      <div className="font-bold text-base sm:text-lg truncate">{stats.displayName}</div>
                       <div className="flex gap-2 mt-1">
                         <span className="text-sm text-gray-500">
                           {stats.totalSessions} Sessions
@@ -101,9 +101,9 @@ export function StatsPage() {
                       </div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-primary">{stats.totalPoints}</div>
-                    <div className="text-sm text-gray-500">Punkte</div>
+                  <div className="text-right flex-shrink-0">
+                    <div className="text-xl sm:text-2xl font-bold text-primary">{stats.totalPoints}</div>
+                    <div className="text-xs sm:text-sm text-gray-500">Punkte</div>
                   </div>
                 </div>
                 {stats.longestStreak > 1 && (
@@ -126,9 +126,9 @@ export function StatsPage() {
                 .reverse()
                 .map((session) => (
                   <Card key={session.id} className="!p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="font-bold">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="font-bold text-sm sm:text-base truncate">
                           {new Date(session.date).toLocaleDateString('de-DE', {
                             weekday: 'long',
                             day: 'numeric',
@@ -141,11 +141,11 @@ export function StatsPage() {
                           {session.participantNames.join(', ')}
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="font-bold text-primary">
+                      <div className="text-right flex-shrink-0">
+                        <div className="font-bold text-primary text-sm sm:text-base">
                           {session.totalMeters.toFixed(1)} m
                         </div>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-xs sm:text-sm text-gray-500">
                           {session.totalWorkKJ.toFixed(2)} kJ
                         </div>
                       </div>

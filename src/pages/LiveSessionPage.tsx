@@ -202,7 +202,7 @@ export function LiveSessionPage() {
         <div className="flex-1 flex flex-col items-center justify-center">
           <div
             key={countdownNum}
-            className="text-[14rem] leading-none font-bold text-white animate-ping-once"
+            className="text-[7rem] sm:text-[10rem] md:text-[14rem] leading-none font-bold text-white animate-ping-once"
           >
             {countdownNum > 0 ? countdownNum : 'LOS!'}
           </div>
@@ -211,13 +211,13 @@ export function LiveSessionPage() {
 
       {/* Main content */}
       {phase !== 'countdown' && (
-      <div className="flex-1 flex flex-col items-center justify-center p-8">
+      <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8">
         {phase === 'rest' ? (
           <>
             <div className="text-2xl font-bold text-gray-400 mb-4 uppercase tracking-wider">
               Pause
             </div>
-            <div className="text-[8rem] leading-none font-bold tabular-nums text-secondary">
+            <div className="text-[5rem] sm:text-[6rem] md:text-[8rem] leading-none font-bold tabular-nums text-secondary">
               {timeLeft}
             </div>
             {nextExercise && (
@@ -246,12 +246,12 @@ export function LiveSessionPage() {
               </div>
             )}
 
-            <h1 className="text-5xl md:text-7xl font-bold text-center mb-8 leading-tight">
+            <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold text-center mb-8 leading-tight">
               {currentExercise.name}
             </h1>
 
             <div
-              className={`text-[10rem] leading-none font-bold tabular-nums
+              className={`text-[5rem] sm:text-[7rem] md:text-[10rem] leading-none font-bold tabular-nums
                 ${timeLeft <= 5 ? 'text-primary animate-pulse' : 'text-white'}`}
             >
               {timeLeft}
@@ -273,7 +273,7 @@ export function LiveSessionPage() {
       )}
 
       {/* Controls */}
-      <div className="flex justify-center gap-4 p-6 pb-20">
+      <div className="flex flex-wrap justify-center gap-3 p-4 pb-20 sm:gap-4 sm:p-6 sm:pb-20">
         {phase !== 'finished' && (
           <>
             <Button
